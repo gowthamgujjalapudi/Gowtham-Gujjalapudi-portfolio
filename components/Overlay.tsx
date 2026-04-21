@@ -27,11 +27,11 @@ export default function Overlay() {
           style={{ opacity: opacity1, y: y1 }}
           className="absolute inset-0 flex items-center justify-center"
         >
-          <div className="text-center px-4">
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-white drop-shadow-lg">
+          <div className="text-center px-6">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter text-white drop-shadow-lg">
               Gowtham Gujjalapudi
             </h1>
-            <p className="text-xl md:text-2xl text-gray-300 mt-4 tracking-wide drop-shadow-md">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mt-4 tracking-wide drop-shadow-md">
               Frontend Developer & Cyber Security Specialist.
             </p>
           </div>
@@ -40,13 +40,13 @@ export default function Overlay() {
         {/* Section 2 */}
         <motion.div
           style={{ opacity: opacity2, y: y2 }}
-          className="absolute inset-0 flex items-center justify-start max-w-7xl mx-auto px-8 md:px-16"
+          className="absolute inset-0 flex items-center justify-start max-w-7xl mx-auto px-6 sm:px-12 md:px-16"
         >
           <div className="max-w-xl">
-            <h2 className="text-4xl md:text-6xl font-bold text-white leading-tight drop-shadow-lg">
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white leading-tight drop-shadow-lg">
               I build secure digital experiences.
             </h2>
-            <p className="text-lg md:text-xl text-gray-400 mt-6 drop-shadow-md">
+            <p className="text-base sm:text-lg md:text-xl text-gray-400 mt-6 drop-shadow-md">
               Specializing in responsive web applications using Next.js and Firebase, with a strong focus on high-performance code and robust cybersecurity.
             </p>
           </div>
@@ -55,13 +55,13 @@ export default function Overlay() {
         {/* Section 3 */}
         <motion.div
           style={{ opacity: opacity3, y: y3 }}
-          className="absolute inset-0 flex items-center justify-end max-w-7xl mx-auto px-8 md:px-16"
+          className="absolute inset-0 flex items-center justify-end max-w-7xl mx-auto px-6 sm:px-12 md:px-16"
         >
           <div className="max-w-xl text-right">
-            <h2 className="text-4xl md:text-6xl font-bold text-white leading-tight drop-shadow-lg">
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white leading-tight drop-shadow-lg">
               Bridging design and engineering.
             </h2>
-            <p className="text-lg md:text-xl text-gray-400 mt-6 drop-shadow-md">
+            <p className="text-base sm:text-lg md:text-xl text-gray-400 mt-6 drop-shadow-md">
               Passionate about UI/UX design. I turn complex problems into elegant, user-centric solutions while maintaining top-tier security standards.
             </p>
           </div>

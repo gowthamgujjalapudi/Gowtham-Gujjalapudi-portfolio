@@ -9,6 +9,8 @@ export default function ScrollyCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { scrollYProgress } = useScroll();
   const [images, setImages] = useState<HTMLImageElement[]>([]);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Preload images
   useEffect(() => {
@@ -22,9 +24,11 @@ export default function ScrollyCanvas() {
       
       img.onload = () => {
         loadedCount++;
+        setLoadingProgress(Math.round((loadedCount / FRAME_COUNT) * 100));
+        
         if (loadedCount === FRAME_COUNT) {
-          // All images loaded, initial draw
           setImages(loadedImages);
+          setIsLoaded(true);
           if (canvasRef.current) {
             drawFrame(loadedImages[0], canvasRef.current);
           }
@@ -39,40 +43,46 @@ export default function ScrollyCanvas() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Handle object-fit: cover logic
-    const canvasRatio = canvas.width / canvas.height;
-    const imgRatio = img.width / img.height;
+    // Use devicePixelRatio for sharper rendering on mobile/high-dpi screens
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
 
-    let drawWidth = canvas.width;
-    let drawHeight = canvas.height;
-    let offsetX = 0;
-    let offsetY = 0;
+    const canvasWidth = rect.width;
+    const canvasHeight = rect.height;
+
+    // Handle object-fit: cover logic
+    const imgRatio = img.width / img.height;
+    const canvasRatio = canvasWidth / canvasHeight;
+
+    let drawWidth, drawHeight, offsetX, offsetY;
 
     if (canvasRatio > imgRatio) {
-      drawHeight = canvas.width / imgRatio;
-      offsetY = (canvas.height - drawHeight) / 2;
+      drawWidth = canvasWidth;
+      drawHeight = canvasWidth / imgRatio;
+      offsetX = 0;
+      offsetY = (canvasHeight - drawHeight) / 2;
     } else {
-      drawWidth = canvas.height * imgRatio;
-      offsetX = (canvas.width - drawWidth) / 2;
+      drawWidth = canvasHeight * imgRatio;
+      drawHeight = canvasHeight;
+      offsetX = (canvasWidth - drawWidth) / 2;
+      offsetY = 0;
     }
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw background color to prevent flashes
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     ctx.fillStyle = "#121212";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
   };
 
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    if (images.length === 0 || !canvasRef.current) return;
+    if (!isLoaded || images.length === 0 || !canvasRef.current) return;
 
-    // Map scroll progress (0 to 1) to frame index (0 to FRAME_COUNT - 1)
     const frameIndex = Math.min(
       FRAME_COUNT - 1,
-      Math.floor(latest * FRAME_COUNT)
+      Math.floor(latest * (FRAME_COUNT - 1))
     );
 
     requestAnimationFrame(() => {
@@ -83,29 +93,41 @@ export default function ScrollyCanvas() {
   // Handle Resize
   useEffect(() => {
     const handleResize = () => {
-      if (!canvasRef.current) return;
-      canvasRef.current.width = window.innerWidth;
-      canvasRef.current.height = window.innerHeight;
+      if (!canvasRef.current || !isLoaded) return;
       
-      if (images.length > 0) {
-        // Redraw current frame on resize
-        const latest = scrollYProgress.get();
-        const frameIndex = Math.min(
-          FRAME_COUNT - 1,
-          Math.floor(latest * FRAME_COUNT)
-        );
-        drawFrame(images[frameIndex], canvasRef.current);
-      }
+      const latest = scrollYProgress.get();
+      const frameIndex = Math.min(
+        FRAME_COUNT - 1,
+        Math.floor(latest * (FRAME_COUNT - 1))
+      );
+      drawFrame(images[frameIndex], canvasRef.current);
     };
 
     window.addEventListener("resize", handleResize);
-    handleResize(); // Initial setup
+    handleResize();
 
     return () => window.removeEventListener("resize", handleResize);
-  }, [images, scrollYProgress]);
+  }, [images, isLoaded, scrollYProgress]);
 
   return (
     <div className="h-[500vh] relative w-full">
+      {!isLoaded && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#121212]">
+          <div className="text-white text-4xl font-bold mb-4 tracking-tighter">
+            {loadingProgress}%
+          </div>
+          <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
+            <motion.div 
+              className="h-full bg-white"
+              initial={{ width: 0 }}
+              animate={{ width: `${loadingProgress}%` }}
+            />
+          </div>
+          <p className="text-gray-500 mt-4 text-sm font-medium uppercase tracking-widest">
+            Loading Experience
+          </p>
+        </div>
+      )}
       <div className="sticky top-0 h-screen w-full overflow-hidden">
         <canvas
           ref={canvasRef}
