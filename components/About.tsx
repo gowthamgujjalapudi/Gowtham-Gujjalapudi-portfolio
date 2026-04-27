@@ -1,9 +1,12 @@
 "use client";
 
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export default function About() {
+  const sectionRef = useRef<HTMLElement>(null);
+
   const skills = [
     { category: "Frontend", items: ["HTML", "CSS", "JavaScript", "React.js", "Next.js"] },
     { category: "Backend & Tools", items: ["Firebase", "GitHub"] },
@@ -30,47 +33,72 @@ export default function About() {
     },
   ];
 
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+    
+    if (!sectionRef.current) return;
+
+    const ctx = gsap.context(() => {
+      // Left Column elements
+      gsap.from(".about-left > *", {
+        y: 50,
+        opacity: 0,
+        stagger: 0.2,
+        duration: 1,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: ".about-left",
+          start: "top 80%",
+        },
+      });
+
+      // Right Column Blocks
+      gsap.from(".about-right-block", {
+        y: 50,
+        opacity: 0,
+        stagger: 0.3,
+        duration: 1,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: ".about-right",
+          start: "top 80%",
+        },
+      });
+
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section className="relative z-20 bg-[#121212] py-24 px-4 md:px-8 border-b border-white/5">
+    <section ref={sectionRef} className="relative z-20 bg-[#121212] py-24 px-4 md:px-8 border-b border-white/5">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16">
         
         {/* Left Column: About Me */}
-        <div className="lg:col-span-5">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-8">
-              About Me
-            </h2>
-            <div className="w-24 h-1 bg-white mb-8 rounded-full opacity-20"></div>
-            
-            <div className="space-y-6 text-gray-400 text-lg leading-relaxed">
-              <p>
-                I am a B.Tech Cyber Security student and passionate frontend developer with strong skills in building modern, responsive, and secure web applications.
-              </p>
-              <p>
-                I specialize in React, Next.js, and Firebase, focusing on performance, scalability, and user experience. I enjoy combining UI/UX design with security principles to create efficient and engaging digital products.
-              </p>
-              <p>
-                I have developed multiple real-world web applications and implemented authentication systems that improved security and performance.
-              </p>
-            </div>
-          </motion.div>
+        <div className="about-left lg:col-span-5">
+          <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-8">
+            About Me
+          </h2>
+          <div className="w-24 h-1 bg-white mb-8 rounded-full opacity-20"></div>
+          
+          <div className="space-y-6 text-gray-400 text-lg leading-relaxed">
+            <p>
+              I am a B.Tech Cyber Security student and passionate frontend developer with strong skills in building modern, responsive, and secure web applications.
+            </p>
+            <p>
+              I specialize in React, Next.js, and Firebase, focusing on performance, scalability, and user experience. I enjoy combining UI/UX design with security principles to create efficient and engaging digital products.
+            </p>
+            <p>
+              I have developed multiple real-world web applications and implemented authentication systems that improved security and performance.
+            </p>
+          </div>
         </div>
 
         {/* Right Column: Skills, Achievements, Education */}
-        <div className="lg:col-span-7 space-y-16">
+        <div className="about-right lg:col-span-7 space-y-16">
           
           {/* Skills Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
+          <div className="about-right-block">
             <h3 className="text-2xl font-semibold text-white mb-6">Skills</h3>
             <div className="space-y-6">
               {skills.map((skillGroup, idx) => (
@@ -91,15 +119,10 @@ export default function About() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Achievements Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
+          <div className="about-right-block">
             <h3 className="text-2xl font-semibold text-white mb-6">Achievements</h3>
             <ul className="space-y-4">
               {achievements.map((achievement, idx) => (
@@ -109,15 +132,10 @@ export default function About() {
                 </li>
               ))}
             </ul>
-          </motion.div>
+          </div>
 
           {/* Education Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
+          <div className="about-right-block">
             <h3 className="text-2xl font-semibold text-white mb-6">Education</h3>
             <div className="space-y-6">
               {education.map((edu, idx) => (
@@ -129,7 +147,7 @@ export default function About() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
         </div>
 

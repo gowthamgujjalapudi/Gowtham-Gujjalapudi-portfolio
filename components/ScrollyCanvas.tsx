@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { useScroll, useMotionValueEvent } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const FRAME_COUNT = 121; // 000 to 120
 
 export default function ScrollyCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { scrollYProgress } = useScroll();
+  const containerRef = useRef<HTMLDivElement>(null);
   const [images, setImages] = useState<HTMLImageElement[]>([]);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -29,9 +30,6 @@ export default function ScrollyCanvas() {
         if (loadedCount === FRAME_COUNT) {
           setImages(loadedImages);
           setIsLoaded(true);
-          if (canvasRef.current) {
-            drawFrame(loadedImages[0], canvasRef.current);
-          }
         }
       };
       
@@ -43,7 +41,6 @@ export default function ScrollyCanvas() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Use devicePixelRatio for sharper rendering on mobile/high-dpi screens
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
@@ -53,7 +50,6 @@ export default function ScrollyCanvas() {
     const canvasWidth = rect.width;
     const canvasHeight = rect.height;
 
-    // Handle object-fit: cover logic
     const imgRatio = img.width / img.height;
     const canvasRatio = canvasWidth / canvasHeight;
 
@@ -77,50 +73,58 @@ export default function ScrollyCanvas() {
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
   };
 
-  useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    if (!isLoaded || images.length === 0 || !canvasRef.current) return;
-
-    const frameIndex = Math.min(
-      FRAME_COUNT - 1,
-      Math.floor(latest * (FRAME_COUNT - 1))
-    );
-
-    requestAnimationFrame(() => {
-      drawFrame(images[frameIndex], canvasRef.current!);
-    });
-  });
-
-  // Handle Resize
   useEffect(() => {
+    if (!isLoaded || images.length === 0 || !canvasRef.current || !containerRef.current) return;
+    
+    gsap.registerPlugin(ScrollTrigger);
+
+    drawFrame(images[0], canvasRef.current);
+
+    const playhead = { frame: 0 };
+
+    const ctx = gsap.context(() => {
+      gsap.to(playhead, {
+        frame: FRAME_COUNT - 1,
+        snap: "frame",
+        ease: "none",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 0.5,
+        },
+        onUpdate: () => {
+          if (canvasRef.current && images[playhead.frame]) {
+            drawFrame(images[playhead.frame], canvasRef.current);
+          }
+        },
+      });
+    }, containerRef);
+
     const handleResize = () => {
-      if (!canvasRef.current || !isLoaded) return;
-      
-      const latest = scrollYProgress.get();
-      const frameIndex = Math.min(
-        FRAME_COUNT - 1,
-        Math.floor(latest * (FRAME_COUNT - 1))
-      );
-      drawFrame(images[frameIndex], canvasRef.current);
+      if (canvasRef.current && images[playhead.frame]) {
+        drawFrame(images[playhead.frame], canvasRef.current);
+      }
     };
-
     window.addEventListener("resize", handleResize);
-    handleResize();
 
-    return () => window.removeEventListener("resize", handleResize);
-  }, [images, isLoaded, scrollYProgress]);
+    return () => {
+      ctx.revert();
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [isLoaded, images]);
 
   return (
-    <div className="h-[500vh] relative w-full">
+    <div ref={containerRef} className="h-[500vh] relative w-full">
       {!isLoaded && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#121212]">
           <div className="text-white text-4xl font-bold mb-4 tracking-tighter">
             {loadingProgress}%
           </div>
           <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
-            <motion.div 
-              className="h-full bg-white"
-              initial={{ width: 0 }}
-              animate={{ width: `${loadingProgress}%` }}
+            <div 
+              className="h-full bg-white transition-all duration-300"
+              style={{ width: `${loadingProgress}%` }}
             />
           </div>
           <p className="text-gray-500 mt-4 text-sm font-medium uppercase tracking-widest">

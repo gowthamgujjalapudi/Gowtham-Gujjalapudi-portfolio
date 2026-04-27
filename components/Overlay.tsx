@@ -1,48 +1,141 @@
 "use client";
 
-import React from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import React, { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export default function Overlay() {
-  const { scrollYProgress } = useScroll();
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Section 1: 0% to 20%
-  const opacity1 = useTransform(scrollYProgress, [0, 0.1, 0.2], [1, 1, 0]);
-  const y1 = useTransform(scrollYProgress, [0, 0.2], [0, -100]); // Parallax up
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
 
-  // Section 2: 20% to 50%
-  const opacity2 = useTransform(scrollYProgress, [0.2, 0.3, 0.4, 0.5], [0, 1, 1, 0]);
-  const y2 = useTransform(scrollYProgress, [0.2, 0.5], [100, -100]);
+    const ctx = gsap.context(() => {
+      // Setup Text Reveal Animation on Load
+      gsap.from(".hero-text-char", {
+        y: 100,
+        opacity: 0,
+        stagger: 0.05,
+        duration: 1.5,
+        ease: "power4.out",
+        delay: 0.5,
+      });
 
-  // Section 3: 50% to 80%
-  const opacity3 = useTransform(scrollYProgress, [0.5, 0.6, 0.7, 0.8], [0, 1, 1, 0]);
-  const y3 = useTransform(scrollYProgress, [0.5, 0.8], [100, -100]);
+      // Section 1
+      gsap.fromTo(
+        ".section-1",
+        { opacity: 1, y: 0 },
+        {
+          opacity: 0,
+          y: -100,
+          ease: "none",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "0% 0%",
+            end: "20% 0%",
+            scrub: true,
+          },
+        }
+      );
+
+      // Section 2
+      gsap.fromTo(
+        ".section-2",
+        { opacity: 0, y: 100 },
+        {
+          opacity: 1,
+          y: 0,
+          ease: "none",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "20% 0%",
+            end: "30% 0%",
+            scrub: true,
+          },
+        }
+      );
+      gsap.to(".section-2", {
+        opacity: 0,
+        y: -100,
+        ease: "none",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "40% 0%",
+          end: "50% 0%",
+          scrub: true,
+        },
+      });
+
+      // Section 3
+      gsap.fromTo(
+        ".section-3",
+        { opacity: 0, y: 100 },
+        {
+          opacity: 1,
+          y: 0,
+          ease: "none",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "50% 0%",
+            end: "60% 0%",
+            scrub: true,
+          },
+        }
+      );
+      gsap.to(".section-3", {
+        opacity: 0,
+        y: -100,
+        ease: "none",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "70% 0%",
+          end: "80% 0%",
+          scrub: true,
+        },
+      });
+
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+    <div ref={containerRef} className="absolute top-0 left-0 w-full h-full pointer-events-none">
       <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
         
         {/* Section 1 */}
-        <motion.div
-          style={{ opacity: opacity1, y: y1 }}
-          className="absolute inset-0 flex items-center justify-center"
-        >
+        <div className="section-1 absolute inset-0 flex items-center justify-center">
           <div className="text-center px-6">
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter text-white drop-shadow-lg">
-              Gowtham Gujjalapudi
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter text-white drop-shadow-lg flex flex-wrap justify-center gap-[0.3em] overflow-hidden pointer-events-auto">
+              {"Gowtham Gujjalapudi".split(" ").map((word, wIdx) => (
+                <div key={wIdx} className="flex overflow-hidden">
+                  {word.split("").map((char, cIdx) => (
+                    <span key={cIdx} className="hero-text-char inline-block">
+                      {char}
+                    </span>
+                  ))}
+                </div>
+              ))}
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mt-4 tracking-wide drop-shadow-md">
-              Frontend Developer & Cyber Security Specialist.
-            </p>
+            <div className="overflow-hidden mt-4">
+              <p className="hero-text-char text-lg sm:text-xl md:text-2xl text-gray-300 tracking-wide drop-shadow-md pointer-events-auto inline-block">
+                Frontend Developer & Cyber Security Specialist.
+              </p>
+            </div>
+            <div className="overflow-hidden mt-8 flex justify-center">
+              <a 
+                href="#projects" 
+                className="hero-text-char pointer-events-auto px-8 py-3 rounded-full bg-white text-black font-semibold tracking-wide transition-transform hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] block"
+              >
+                View My Work
+              </a>
+            </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Section 2 */}
-        <motion.div
-          style={{ opacity: opacity2, y: y2 }}
-          className="absolute inset-0 flex items-center justify-start max-w-7xl mx-auto px-6 sm:px-12 md:px-16"
-        >
-          <div className="max-w-xl">
+        <div className="section-2 absolute inset-0 flex items-center justify-start max-w-7xl mx-auto px-6 sm:px-12 md:px-16 opacity-0">
+          <div className="max-w-xl pointer-events-auto">
             <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white leading-tight drop-shadow-lg">
               I build secure digital experiences.
             </h2>
@@ -50,14 +143,11 @@ export default function Overlay() {
               Specializing in responsive web applications using Next.js and Firebase, with a strong focus on high-performance code and robust cybersecurity.
             </p>
           </div>
-        </motion.div>
+        </div>
 
         {/* Section 3 */}
-        <motion.div
-          style={{ opacity: opacity3, y: y3 }}
-          className="absolute inset-0 flex items-center justify-end max-w-7xl mx-auto px-6 sm:px-12 md:px-16"
-        >
-          <div className="max-w-xl text-right">
+        <div className="section-3 absolute inset-0 flex items-center justify-end max-w-7xl mx-auto px-6 sm:px-12 md:px-16 opacity-0">
+          <div className="max-w-xl text-right pointer-events-auto">
             <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white leading-tight drop-shadow-lg">
               Bridging design and engineering.
             </h2>
@@ -65,7 +155,7 @@ export default function Overlay() {
               Passionate about UI/UX design. I turn complex problems into elegant, user-centric solutions while maintaining top-tier security standards.
             </p>
           </div>
-        </motion.div>
+        </div>
 
       </div>
     </div>
